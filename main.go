@@ -252,6 +252,10 @@ func main() {
 	fmt.Println(labels)
 	fmt.Println(listener.stack)
 
+	for range 256 - line {
+		output += "00\n"
+	}
+
 	fmt.Println("output:")
 	fmt.Println(output)
 }
