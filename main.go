@@ -207,7 +207,7 @@ func main() {
 	// (NOP x27) means 27 NOP instructions
 	is := antlr.NewInputStream(`
 	BRA 0x28 # This instruction is written to the memory address 0x00,
-	(NOP x27) # The first instruction must be written to address 0x28
+	(NOP x39) # The first instruction must be written to address 0x28, this creates 39 NOP instructions(it's my addition to make it easier)
 	MOVH R1, 0x00
 	MOVL R1, 0x0A # This first instruction is written to the address 0x28,
 	# R1 is used for the number of iterations
