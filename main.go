@@ -8,100 +8,96 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 )
 
-type opcode struct {
-	name string
-	code int
+var opcodes = map[string]int{
+	"BRA":   0x00,
+	"BNE":   0x01,
+	"BEQ":   0x02,
+	"POP":   0x03,
+	"PSH":   0x04,
+	"INC":   0x05,
+	"DEC":   0x06,
+	"LSL":   0x07,
+	"LSR":   0x08,
+	"ASR":   0x09,
+	"CSL":   0x0A,
+	"CSR":   0x0B,
+	"AND":   0x0C,
+	"ORR":   0x0D,
+	"NOT":   0x0E,
+	"XOR":   0x0F,
+	"NAND":  0x10,
+	"MOVH":  0x11,
+	"LDR":   0x12,
+	"STR":   0x13,
+	"MOVL":  0x14,
+	"ADD":   0x15,
+	"ADC":   0x16,
+	"SUB":   0x17,
+	"MOVS":  0x18,
+	"ADDS":  0x19,
+	"SUBS":  0x1A,
+	"ANDS":  0x1B,
+	"ORRS":  0x1C,
+	"XORS":  0x1D,
+	"BX":    0x1E,
+	"BL":    0x1F,
+	"LDRIM": 0x20,
+	"STRIM": 0x21,
+	"NOP":   0x39,
 }
 
-var opcodes = []opcode{
-	{"BRA", 0x00},
-	{"BNE", 0x01},
-	{"BEQ", 0x02},
-	{"POP", 0x03},
-	{"PSH", 0x04},
-	{"INC", 0x05},
-	{"DEC", 0x06},
-	{"LSL", 0x07},
-	{"LSR", 0x08},
-	{"ASR", 0x09},
-	{"CSL", 0x0A},
-	{"CSR", 0x0B},
-	{"AND", 0x0C},
-	{"ORR", 0x0D},
-	{"NOT", 0x0E},
-	{"XOR", 0x0F},
-	{"NAND", 0x10},
-	{"MOVH", 0x11},
-	{"LDR", 0x12},
-	{"STR", 0x13},
-	{"MOVL", 0x14},
-	{"ADD", 0x15},
-	{"ADC", 0x16},
-	{"SUB", 0x17},
-	{"MOVS", 0x18},
-	{"ADDS", 0x19},
-	{"SUBS", 0x1A},
-	{"ANDS", 0x1B},
-	{"ORRS", 0x1C},
-	{"XORS", 0x1D},
-	{"BX", 0x1E},
-	{"BL", 0x1F},
-	{"LDRIM", 0x20},
-	{"STRIM", 0x21},
-	{"NOP", 0x39},
+var registers2 = map[string]int{
+	"R1": 0b00,
+	"R2": 0b01,
+	"R3": 0b10,
+	"R4": 0b11,
 }
 
-func strToHex(s string) int {
-	var result int
+var registers3 = map[string]int{
+	"PC": 0b000,
+	"SP": 0b010,
+	"AR": 0b011,
+	"R1": 0b100,
+	"R2": 0b101,
+	"R3": 0b110,
+	"R4": 0b111,
+}
 
-	switch s {
-	case "R0":
-		result = 0x00
-	case "R1":
-		result = 0x01
-	case "R2":
-		result = 0x02
-	case "R3":
-		result = 0x03
+func strToHex(s string, v int) int {
+	if stohex(s) != -1 {
+		return stohex(s)
 	}
 
-	for _, v := range opcodes {
-		if v.name == s {
-			result = v.code
-			break
+	if v == 2 {
+		t := registers2[s]
+		if t != 0 {
+			return t
+		}
+	} else {
+		t := registers3[s]
+		if t != 0 {
+			return t
 		}
 	}
 
-	// weird tricks instead of rewrite
-	switch s {
-	case "PC":
-		result = 0x00 - 4
-	case "SP":
-		result = 0x10 - 4
-	case "AR":
-		result = 0x11 - 4
-	}
-
 	if labels[s] != 0 {
-		result = labels[s]
+		return labels[s]
 	}
 
-	fmt.Printf("- map: %s 0x%x \n", s, result)
-
-	return result
+	panic("unknown value")
 }
 
 type bListener struct {
 	*parser.BasebListener
 
-	stack []int
+	stack []string
 }
 
-func (l *bListener) push(i int) {
+func (l *bListener) push(i string) {
 	l.stack = append(l.stack, i)
 }
 
-func (l *bListener) pop() int {
+func (l *bListener) pop() string {
 	if len(l.stack) < 1 {
 		panic("stack is empty unable to pop")
 	}
@@ -116,7 +112,7 @@ func (l *bListener) pop() int {
 }
 
 func (l *bListener) ExitRepeat(c *parser.RepeatContext) {
-	opcode := strToHex(c.Opcode().GetText())
+	opcode := opcodes[c.Opcode().GetText()]
 
 	repeat := c.TIMES().GetText()
 
@@ -130,7 +126,7 @@ func (l *bListener) ExitRepeat(c *parser.RepeatContext) {
 		fmt.Printf("%d %d, %04x \n", line, line+1, opcode|opcode<<10)
 
 		output += fmt.Sprintf("%02x\n", opcode)
-		output += fmt.Sprintf("%02x\n", opcode)
+		output += fmt.Sprintf("%02x\n", 0)
 		line += 2
 	}
 
@@ -138,17 +134,7 @@ func (l *bListener) ExitRepeat(c *parser.RepeatContext) {
 
 func (l *bListener) EnterArgument(c *parser.ArgumentContext) {
 	s := c.GetText()
-
-	if s[0] == '0' && s[1] == 'x' {
-		// hex
-		if stoi, err := strconv.ParseInt(s[2:], 16, 64); err != nil {
-			panic(err)
-		} else {
-			l.push(int(stoi))
-		}
-	} else {
-		l.push(strToHex(s))
-	}
+	l.push(s)
 }
 
 var labels = make(map[string]int)
@@ -160,40 +146,51 @@ func (l *bListener) EnterLbl(c *parser.LblContext) {
 var line = 0
 var output = ""
 
+func stohex(s string) int {
+	if stoi, err := strconv.ParseInt(s[2:], 16, 64); err != nil {
+		return -1
+	} else {
+		return int(stoi)
+	}
+}
+
 func (l *bListener) ExitInstruction(c *parser.InstructionContext) {
-	a := strToHex(c.Opcode().GetText())
+	a := opcodes[c.Opcode().GetText()]
+
+	if a == 0x05 || a == 0x06 { // INC and DEC has 2 arg but uses reg3 format
+		l.push("R1")
+	}
 
 	if len(l.stack) == 1 {
 		// like bra
 		a = a << 10
 		// rsel 0
-		a = a | l.pop()
+		a = a | strToHex(l.pop(), 2)
 	} else if len(l.stack) == 2 {
 		// like movh r1, 0x00
 		a = a << 10
-		a = a | l.pop()        // adr
-		a = a | (l.pop() << 8) // rsel
+		a = a | strToHex(l.pop(), 2)       // adr
+		a = a | (registers2[l.pop()] << 8) // rsel
 	} else if len(l.stack) == 3 {
 		// like add r2, r2, r3
 		a = a << 10
 		// s 0
 
-		a = a | (l.pop() + 4)
-		a = a | ((l.pop() + 4) << 3)
-		a = a | ((l.pop() + 4) << 6)
+		a = a | registers3[l.pop()]
+		a = a | (registers3[l.pop()] << 3)
+		a = a | (registers3[l.pop()] << 6)
 	}
 
-	for _, v := range l.stack {
-		v = v << 4
-		a = a | v
+	if len(l.stack) != 0 {
+		panic("stack is not empty")
 	}
 
 	fmt.Println(c.GetText())
 	fmt.Printf("%d %d, %04x \n", line, line+1, a)
 	line += 2
 
-	output += fmt.Sprintf("%02x\n", a&0xff00>>8)
 	output += fmt.Sprintf("%02x\n", a&0x00ff)
+	output += fmt.Sprintf("%02x\n", a&0xff00>>8)
 }
 
 // func (f *bListener) EnterEveryRule(ctx antlr.ParserRuleContext) {
@@ -204,10 +201,10 @@ func main() {
 	// Setup the input
 
 	// NOP is special empty instruction
-	// (NOP x27) means 27 NOP instructions
+	// (NOP x38) means 27 NOP instructions
 	is := antlr.NewInputStream(`
 	BRA 0x28 # This instruction is written to the memory address 0x00,
-	(NOP x39) # The first instruction must be written to address 0x28, this creates 39 NOP instructions(it's my addition to make it easier)
+	(NOP x38) # The first instruction must be written to address 0x28, this creates 38 NOP instructions(it's my addition to make it easier)
 	MOVH R1, 0x00
 	MOVL R1, 0x0A # This first instruction is written to the address 0x28,
 	# R1 is used for the number of iterations
