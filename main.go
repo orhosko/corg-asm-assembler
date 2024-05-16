@@ -2,6 +2,7 @@ package main
 
 import (
 	"corgcompl/parser"
+	"flag"
 	"fmt"
 	"strconv"
 
@@ -118,12 +119,17 @@ func (l *bListener) ExitRepeat(c *parser.RepeatContext) {
 
 	repeatInt, err := strconv.Atoi(repeat[1:])
 
+	repeatInt += 2 // it is based on PC's value
+
 	if err != nil {
 		panic(err)
 	}
 
 	for i := 0; i < repeatInt/2; i++ {
-		fmt.Printf("%d %d, %04x \n", line, line+1, opcode|opcode<<10)
+		if debug {
+			fmt.Println(c.GetText())
+			fmt.Printf("%d %d, %04x \n", line, line+1, opcode|opcode<<10)
+		}
 
 		output += fmt.Sprintf("%02x\n", opcode)
 		output += fmt.Sprintf("%02x\n", 0)
@@ -158,7 +164,11 @@ func (l *bListener) ExitInstruction(c *parser.InstructionContext) {
 	a := opcodes[c.Opcode().GetText()]
 
 	if a == 0x05 || a == 0x06 { // INC and DEC has 2 arg but uses reg3 format
-		l.push("R1")
+		l.push("PC")
+	}
+
+	if a == 0x03 || a == 0x04 { // POP and PSH has 1 arg but uses rsel instead of adr
+		l.push("0x00")
 	}
 
 	if len(l.stack) == 1 {
@@ -185,8 +195,10 @@ func (l *bListener) ExitInstruction(c *parser.InstructionContext) {
 		panic("stack is not empty")
 	}
 
-	fmt.Println(c.GetText())
-	fmt.Printf("%d %d, %04x \n", line, line+1, a)
+	if debug {
+		fmt.Println(c.GetText())
+		fmt.Printf("%d %d, %04x \n", line, line+1, a)
+	}
 	line += 2
 
 	output += fmt.Sprintf("%02x\n", a&0x00ff)
@@ -196,6 +208,8 @@ func (l *bListener) ExitInstruction(c *parser.InstructionContext) {
 // func (f *bListener) EnterEveryRule(ctx antlr.ParserRuleContext) {
 // 	fmt.Printf("EnterEveryRule %v\n", ctx.GetText())
 // }
+
+var debug = false
 
 func main() {
 	// Setup the input
@@ -221,7 +235,19 @@ func main() {
 	BNE LABEL # Go back to LABEL if Z=0 (Iteration Counter > 0)
 	INC AR, AR # AR ← AR + 1 (Total will be written to 0xBB)
 	STR R2 # M[AR] ← R2 (Store Total at 0xBB)
+	XOR R3, R1, R2
 	`)
+
+	code := flag.String("code", "", "code")
+	padding := flag.Bool("padding", false, "add padding to the output")
+	dbg := flag.Bool("debug", false, "debug")
+	flag.Parse()
+
+	debug = *dbg
+
+	if *code != "" {
+		is = antlr.NewInputStream(*code + "\n")
+	}
 
 	// Create the Lexer
 	lexer := parser.NewbLexer(is)
@@ -246,13 +272,19 @@ func main() {
 	var listener bListener
 	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Prog())
 
-	fmt.Println(labels)
-	fmt.Println(listener.stack)
-
-	for range 256 - line {
-		output += "00\n"
+	if debug {
+		fmt.Println(labels)
+		fmt.Println(listener.stack)
 	}
 
-	fmt.Println("output:")
+	if *padding {
+		for range 256 - line {
+			output += "00\n"
+		}
+	}
+
+	if debug {
+		fmt.Println("output:")
+	}
 	fmt.Println(output)
 }

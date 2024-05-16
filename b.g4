@@ -68,7 +68,11 @@ opcode
     | MOVL
     | MOVS
     | LDR
+    | POP
+    | PSH
     | STR
+    | SUB
+    | XOR
     | NOP
     ;
 
@@ -92,7 +96,15 @@ MOVS: 'MOVS';
 
 LDR: 'LDR';
 
+POP: 'POP';
+
+PSH: 'PSH';
+
 STR: 'STR';
+
+XOR: 'XOR';
+
+SUB: 'SUB';
 
 NOP: 'NOP';
 

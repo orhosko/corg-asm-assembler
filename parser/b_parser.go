@@ -35,12 +35,12 @@ func bParserInit() {
 	staticData.LiteralNames = []string{
 		"", "'('", "')'", "':'", "','", "'*'", "'+'", "'-'", "'#'", "", "'ADD'",
 		"'AND'", "'BNE'", "'BRA'", "'DEC'", "'INC'", "'MOVH'", "'MOVL'", "'MOVS'",
-		"'LDR'", "'STR'", "'NOP'",
+		"'LDR'", "'POP'", "'PSH'", "'STR'", "'XOR'", "'SUB'", "'NOP'",
 	}
 	staticData.SymbolicNames = []string{
 		"", "", "", "", "", "", "", "", "", "TIMES", "ADD", "AND", "BNE", "BRA",
-		"DEC", "INC", "MOVH", "MOVL", "MOVS", "LDR", "STR", "NOP", "NAME", "NUMBER",
-		"HEX", "COMMENT", "STRING", "EOL", "WS",
+		"DEC", "INC", "MOVH", "MOVL", "MOVS", "LDR", "POP", "PSH", "STR", "XOR",
+		"SUB", "NOP", "NAME", "NUMBER", "HEX", "COMMENT", "STRING", "EOL", "WS",
 	}
 	staticData.RuleNames = []string{
 		"prog", "line", "instruction", "repeat", "lbl", "argumentlist", "label",
@@ -48,7 +48,7 @@ func bParserInit() {
 	}
 	staticData.PredictionContextCache = antlr.NewPredictionContextCache()
 	staticData.serializedATN = []int32{
-		4, 1, 28, 93, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
+		4, 1, 32, 93, 2, 0, 7, 0, 2, 1, 7, 1, 2, 2, 7, 2, 2, 3, 7, 3, 2, 4, 7,
 		4, 2, 5, 7, 5, 2, 6, 7, 6, 2, 7, 7, 7, 2, 8, 7, 8, 2, 9, 7, 9, 2, 10, 7,
 		10, 2, 11, 7, 11, 2, 12, 7, 12, 1, 0, 5, 0, 28, 8, 0, 10, 0, 12, 0, 31,
 		9, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 3, 1, 38, 8, 1, 1, 1, 1, 1, 1, 2, 3,
@@ -57,8 +57,8 @@ func bParserInit() {
 		7, 65, 8, 7, 1, 7, 1, 7, 1, 7, 1, 7, 3, 7, 71, 8, 7, 1, 7, 1, 7, 3, 7,
 		75, 8, 7, 1, 7, 1, 7, 1, 7, 1, 7, 3, 7, 81, 8, 7, 1, 8, 1, 8, 1, 9, 1,
 		9, 1, 10, 1, 10, 1, 11, 1, 11, 1, 12, 1, 12, 1, 12, 0, 0, 13, 0, 2, 4,
-		6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 0, 3, 1, 0, 6, 7, 1, 0, 23, 24, 1,
-		0, 10, 21, 92, 0, 29, 1, 0, 0, 0, 2, 37, 1, 0, 0, 0, 4, 42, 1, 0, 0, 0,
+		6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 0, 3, 1, 0, 6, 7, 1, 0, 27, 28, 1,
+		0, 10, 25, 92, 0, 29, 1, 0, 0, 0, 2, 37, 1, 0, 0, 0, 4, 42, 1, 0, 0, 0,
 		6, 48, 1, 0, 0, 0, 8, 53, 1, 0, 0, 0, 10, 56, 1, 0, 0, 0, 12, 61, 1, 0,
 		0, 0, 14, 80, 1, 0, 0, 0, 16, 82, 1, 0, 0, 0, 18, 84, 1, 0, 0, 0, 20, 86,
 		1, 0, 0, 0, 22, 88, 1, 0, 0, 0, 24, 90, 1, 0, 0, 0, 26, 28, 3, 2, 1, 0,
@@ -66,7 +66,7 @@ func bParserInit() {
 		0, 0, 0, 30, 32, 1, 0, 0, 0, 31, 29, 1, 0, 0, 0, 32, 33, 5, 0, 0, 1, 33,
 		1, 1, 0, 0, 0, 34, 38, 3, 4, 2, 0, 35, 38, 3, 8, 4, 0, 36, 38, 3, 6, 3,
 		0, 37, 34, 1, 0, 0, 0, 37, 35, 1, 0, 0, 0, 37, 36, 1, 0, 0, 0, 37, 38,
-		1, 0, 0, 0, 38, 39, 1, 0, 0, 0, 39, 40, 5, 27, 0, 0, 40, 3, 1, 0, 0, 0,
+		1, 0, 0, 0, 38, 39, 1, 0, 0, 0, 39, 40, 5, 31, 0, 0, 40, 3, 1, 0, 0, 0,
 		41, 43, 3, 12, 6, 0, 42, 41, 1, 0, 0, 0, 42, 43, 1, 0, 0, 0, 43, 44, 1,
 		0, 0, 0, 44, 46, 3, 24, 12, 0, 45, 47, 3, 10, 5, 0, 46, 45, 1, 0, 0, 0,
 		46, 47, 1, 0, 0, 0, 47, 5, 1, 0, 0, 0, 48, 49, 5, 1, 0, 0, 49, 50, 3, 24,
@@ -81,8 +81,8 @@ func bParserInit() {
 		73, 75, 3, 22, 11, 0, 74, 72, 1, 0, 0, 0, 74, 75, 1, 0, 0, 0, 75, 81, 1,
 		0, 0, 0, 76, 77, 5, 1, 0, 0, 77, 78, 3, 14, 7, 0, 78, 79, 5, 2, 0, 0, 79,
 		81, 1, 0, 0, 0, 80, 64, 1, 0, 0, 0, 80, 76, 1, 0, 0, 0, 81, 15, 1, 0, 0,
-		0, 82, 83, 5, 8, 0, 0, 83, 17, 1, 0, 0, 0, 84, 85, 5, 26, 0, 0, 85, 19,
-		1, 0, 0, 0, 86, 87, 5, 22, 0, 0, 87, 21, 1, 0, 0, 0, 88, 89, 7, 1, 0, 0,
+		0, 82, 83, 5, 8, 0, 0, 83, 17, 1, 0, 0, 0, 84, 85, 5, 30, 0, 0, 85, 19,
+		1, 0, 0, 0, 86, 87, 5, 26, 0, 0, 87, 21, 1, 0, 0, 0, 88, 89, 7, 1, 0, 0,
 		89, 23, 1, 0, 0, 0, 90, 91, 7, 2, 0, 0, 91, 25, 1, 0, 0, 0, 9, 29, 37,
 		42, 46, 59, 64, 70, 74, 80,
 	}
@@ -142,15 +142,19 @@ const (
 	bParserMOVL    = 17
 	bParserMOVS    = 18
 	bParserLDR     = 19
-	bParserSTR     = 20
-	bParserNOP     = 21
-	bParserNAME    = 22
-	bParserNUMBER  = 23
-	bParserHEX     = 24
-	bParserCOMMENT = 25
-	bParserSTRING  = 26
-	bParserEOL     = 27
-	bParserWS      = 28
+	bParserPOP     = 20
+	bParserPSH     = 21
+	bParserSTR     = 22
+	bParserXOR     = 23
+	bParserSUB     = 24
+	bParserNOP     = 25
+	bParserNAME    = 26
+	bParserNUMBER  = 27
+	bParserHEX     = 28
+	bParserCOMMENT = 29
+	bParserSTRING  = 30
+	bParserEOL     = 31
+	bParserWS      = 32
 )
 
 // bParser rules.
@@ -296,7 +300,7 @@ func (p *bParser) Prog() (localctx IProgContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	for (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&142605314) != 0 {
+	for (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&2281700354) != 0 {
 		{
 			p.SetState(26)
 			p.Line()
@@ -653,7 +657,7 @@ func (p *bParser) Instruction() (localctx IInstructionContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&96469282) != 0 {
+	if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&1543504162) != 0 {
 		{
 			p.SetState(45)
 			p.Argumentlist()
@@ -1881,7 +1885,11 @@ type IOpcodeContext interface {
 	MOVL() antlr.TerminalNode
 	MOVS() antlr.TerminalNode
 	LDR() antlr.TerminalNode
+	POP() antlr.TerminalNode
+	PSH() antlr.TerminalNode
 	STR() antlr.TerminalNode
+	SUB() antlr.TerminalNode
+	XOR() antlr.TerminalNode
 	NOP() antlr.TerminalNode
 
 	// IsOpcodeContext differentiates from other interfaces.
@@ -1960,8 +1968,24 @@ func (s *OpcodeContext) LDR() antlr.TerminalNode {
 	return s.GetToken(bParserLDR, 0)
 }
 
+func (s *OpcodeContext) POP() antlr.TerminalNode {
+	return s.GetToken(bParserPOP, 0)
+}
+
+func (s *OpcodeContext) PSH() antlr.TerminalNode {
+	return s.GetToken(bParserPSH, 0)
+}
+
 func (s *OpcodeContext) STR() antlr.TerminalNode {
 	return s.GetToken(bParserSTR, 0)
+}
+
+func (s *OpcodeContext) SUB() antlr.TerminalNode {
+	return s.GetToken(bParserSUB, 0)
+}
+
+func (s *OpcodeContext) XOR() antlr.TerminalNode {
+	return s.GetToken(bParserXOR, 0)
 }
 
 func (s *OpcodeContext) NOP() antlr.TerminalNode {
@@ -1998,7 +2022,7 @@ func (p *bParser) Opcode() (localctx IOpcodeContext) {
 		p.SetState(90)
 		_la = p.GetTokenStream().LA(1)
 
-		if !((int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&4193280) != 0) {
+		if !((int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&67107840) != 0) {
 			p.GetErrorHandler().RecoverInline(p)
 		} else {
 			p.GetErrorHandler().ReportMatch(p)
